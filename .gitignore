@@ -1,0 +1,13 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+venv/
+
+# Real datasets NEVER enter this repo -- not even temporarily. The values here
+# would be children's names, dates of birth and clinical measurements, and git
+# history keeps what you later delete. Point the app at a runtime path outside
+# the tree (KIDDO_DATASET) and keep sample/ the only data committed.
+/data/
+*.local.json

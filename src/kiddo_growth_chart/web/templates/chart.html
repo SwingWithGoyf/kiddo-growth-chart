@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Growth chart</title>
+<link rel="stylesheet" href="{{ url_for('kiddo_growth_chart.static', filename='chart.css') }}">
+</head><body>
+<main class="wrap">
+  <header class="bar">
+    <h1>Growth chart</h1>
+    <div class="controls" role="group" aria-label="View">
+      <button id="clock-date" class="tab is-on" aria-pressed="true">By year</button>
+      <button id="clock-age"  class="tab" aria-pressed="false">By age</button>
+      <span class="spacer"></span>
+      <button id="units" class="tab" title="Toggle ft/in and cm">ft/in</button>
+      <button id="play" class="tab primary" aria-pressed="false">▶ Play years</button>
+    </div>
+  </header>
+
+  <section id="chart-pane">
+    <svg id="chart" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid meet"
+         role="img" aria-label="Height by year for each child"></svg>
+  </section>
+
+  <section id="video-pane" hidden>
+    <div class="frame-label"><span id="frame-when"></span></div>
+    <div class="stage">
+      <div id="ruler" class="ruler" aria-hidden="true"></div>
+      <div id="figures" class="figures"></div>
+    </div>
+    <input id="scrub" class="scrub" type="range" min="0" value="0" step="1"
+           aria-label="Step through measurements">
+  </section>
+
+  <footer class="legend" id="legend"></footer>
+  <p class="muted note">
+    Points are measurements. Straight segments join them because nothing here
+    interpolates — a smooth curve would invent the shape of a spurt nobody
+    measured. A dashed segment means its two ends were measured differently.
+  </p>
+</main>
+<script src="{{ url_for('kiddo_growth_chart.static', filename='chart.js') }}"></script>
+</body></html>

@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest something the chart, the video mode, or the provider interface should do.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Same request as the bug template: describe your data by its *shape*, and
+        please don't attach photos of your kids.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to see that you can't today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: honesty
+    attributes:
+      label: Does it involve drawing a value that wasn't measured?
+      description: >
+        This project deliberately refuses to interpolate — no splines between
+        measurements, no tweening between frames, no nearest-photo fallback, and
+        no bouncing on the readout. Proposals that cross those lines aren't
+        automatically rejected, but they need to say how the render stays
+        honest about what was actually measured.
+    validations:
+      required: false

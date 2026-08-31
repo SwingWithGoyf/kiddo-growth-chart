@@ -1,0 +1,83 @@
+name: Bug report
+description: Something renders wrong, crashes, or reads as data when it isn't.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Please don't attach photos of your children.** This is a tool for
+        family photos, so the natural instinct is to paste the screen that went
+        wrong — and that screen has kids on it. Everything below asks for the
+        *shape* of your data instead, which is what actually reproduces a bug:
+        counts, date ranges, and a row with the values replaced.
+
+        If a portrait is genuinely part of the fault, crop it out and describe
+        what it did, or substitute an image of anything else with the same
+        dimensions.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: The shape of your dataset
+      description: >
+        Not the dataset. How many kids, how many measurements each, the date
+        range they span, and which `method` values appear.
+      placeholder: |
+        4 kids, 9 / 12 / 6 / 5 measurements
+        dates span 2014-03 to 2026-08
+        methods: clinical (28), doorframe (4)
+        units in the source file: mixed in/cm
+    validations:
+      required: true
+
+  - type: textarea
+    id: redacted-row
+    attributes:
+      label: A redacted row
+      description: >
+        One measurement entry with the identifying values swapped out — keep the
+        keys, the units and the date *precision*, change the name, the DOB and
+        the numbers.
+      render: json
+      placeholder: |
+        { "key": "kid-a", "name": "Kid A", "dob": "2011-01-01", "sex": "f",
+          "measurements": [
+            { "date": "2019-03-25", "value": 49.5, "unit": "in", "method": "clinical" }
+          ] }
+    validations:
+      required: false
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Photo provider
+      options:
+        - none / not configured
+        - folder (ships in the box)
+        - a third-party provider
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version and Python
+      placeholder: "0.1.0, Python 3.12, Firefox 141"
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceback
+    attributes:
+      label: Traceback or console output
+      description: Check it for paths and filenames that name a real person before pasting.
+      render: text
+    validations:
+      required: false

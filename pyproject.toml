@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kiddo-growth-chart"
+version = "0.1.0"
+description = "Bring-your-own-data height chart for kids. Local-only, plugin photo sources."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = ["flask>=3.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+# The reference photo provider ships in-tree. Third-party providers register
+# themselves here; see docs in providers/__init__.py.
+[project.entry-points."kiddo_growth_chart.providers"]
+folder = "kiddo_growth_chart.providers.folder:FolderProvider"
+
+[project.scripts]
+kiddo-growth-chart = "kiddo_growth_chart.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+kiddo_growth_chart = ["web/templates/*.html", "web/static/*", "growth/tables/*.csv"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

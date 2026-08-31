@@ -1,0 +1,305 @@
+{
+  "_comment": "Invented children. No real person's data belongs in this repo.",
+  "kids": [
+    {
+      "key": "ada",
+      "name": "Ada",
+      "dob": "2011-03-14",
+      "sex": "f",
+      "photo_person_id": "ada",
+      "measurements": [
+        {
+          "date": "2012-03-08",
+          "value": 29.5,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2013-04-06",
+          "value": 32.1,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2014-03-18",
+          "value": 34.6,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2015-02-24",
+          "value": 37.2,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2016-04-14",
+          "value": 39.8,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2017-03-23",
+          "value": 42.3,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2018-03-02",
+          "value": 44.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2019-04-10",
+          "value": 47.4,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2020-03-16",
+          "value": 50.7,
+          "unit": "in",
+          "method": "doorframe"
+        },
+        {
+          "date": "2021-03-31",
+          "value": 52.6,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2022-03-05",
+          "value": 55.1,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2023-04-04",
+          "value": 58.7,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2024-03-20",
+          "value": 62.3,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2025-03-28",
+          "value": 65.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2026-03-11",
+          "value": 68.4,
+          "unit": "in",
+          "method": "clinical"
+        }
+      ]
+    },
+    {
+      "key": "bram",
+      "name": "Bram",
+      "dob": "2013-08-02",
+      "sex": "m",
+      "photo_person_id": "bram",
+      "measurements": [
+        {
+          "date": "2014-07-27",
+          "value": 30.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2015-08-25",
+          "value": 33.6,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2016-08-06",
+          "value": 36.3,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2017-07-15",
+          "value": 39.1,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2018-09-02",
+          "value": 41.8,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2019-08-11",
+          "value": 44.5,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2020-07-21",
+          "value": 47.2,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2021-08-29",
+          "value": 49.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2022-08-04",
+          "value": 52.6,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2023-08-19",
+          "value": 55.4,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2024-07-24",
+          "value": 58.1,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2025-08-23",
+          "value": 60.8,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2026-08-08",
+          "value": 64.5,
+          "unit": "in",
+          "method": "clinical"
+        }
+      ]
+    },
+    {
+      "key": "cleo",
+      "name": "Cleo",
+      "dob": "2016-11-27",
+      "sex": "f",
+      "photo_person_id": "cleo",
+      "measurements": [
+        {
+          "date": "2017-11-21",
+          "value": 28.3,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2018-12-20",
+          "value": 30.6,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2019-12-01",
+          "value": 32.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2020-11-09",
+          "value": 35.2,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2021-12-28",
+          "value": 38.3,
+          "unit": "in",
+          "method": "home_shoes"
+        },
+        {
+          "date": "2022-12-06",
+          "value": 39.8,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2023-11-15",
+          "value": 42.0,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2024-12-24",
+          "value": 44.3,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2025-11-29",
+          "value": 46.6,
+          "unit": "in",
+          "method": "clinical"
+        }
+      ]
+    },
+    {
+      "key": "dov",
+      "name": "Dov",
+      "dob": "2019-05-09",
+      "sex": "m",
+      "photo_person_id": "dov",
+      "measurements": [
+        {
+          "date": "2020-05-03",
+          "value": 29.9,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2021-06-01",
+          "value": 32.4,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2022-05-13",
+          "value": 34.8,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2023-04-21",
+          "value": 37.2,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2024-06-09",
+          "value": 39.7,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2025-05-18",
+          "value": 42.1,
+          "unit": "in",
+          "method": "clinical"
+        },
+        {
+          "date": "2026-04-27",
+          "value": 44.6,
+          "unit": "in",
+          "method": "clinical"
+        }
+      ]
+    }
+  ]
+}

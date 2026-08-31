@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kiddo-growth-chart — configuration problem</title>
+<link rel="stylesheet" href="{{ url_for('kiddo_growth_chart.static', filename='chart.css') }}">
+</head><body>
+<main class="wrap">
+  <h1>Can't read the dataset</h1>
+  <p class="error">{{ message }}</p>
+  <p class="muted">An empty chart and a broken config must never look the same,
+     so this page says so instead of drawing nothing.</p>
+</main></body></html>

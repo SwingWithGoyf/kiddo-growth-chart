@@ -1,0 +1,4 @@
+# Blank issues are disabled deliberately: the templates exist to ask for the
+# shape of a dataset instead of the dataset, and a blank box invites a
+# screenshot of somebody's children.
+blank_issues_enabled: false
