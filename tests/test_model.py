@@ -8,12 +8,10 @@ from kiddo_growth_chart.model import Kid, Measurement, Method, Unit
 def test_inches_convert_to_canonical_cm_and_keep_the_source():
     m = Measurement.from_source(dt.date(2020, 5, 1), 48.5, "in", Method.CLINICAL)
     assert m.cm == pytest.approx(123.19, abs=0.01)
-    # The source survives conversion: a bare number with no unit is unrecoverable.
     assert (m.source_value, m.source_unit) == (48.5, Unit.IN)
 
 
 def test_age_is_measured_not_assumed():
-    """A visit near a birthday is not the birthday, and the gap is real height."""
     kid = Kid(key="k", name="K", dob=dt.date(2016, 11, 27))
     assert kid.age_days_at(dt.date(2024, 11, 27)) == 2922
     # 3 weeks before the 8th birthday is still 7, and must not round to 8.
@@ -52,7 +50,7 @@ def test_mixed_methods_is_visible_on_the_kid():
 
 
 @pytest.mark.parametrize("cm,expected", [
-    (152.3, (5, 0.0)),      # 59.96in -- rounds to a whole foot, must not be 4'12.0"
+    (152.3, (5, 0.0)),      # 59.96in rounds to a whole foot, not 4'12.0"
     (152.4, (5, 0.0)),
     (123.19, (4, 0.5)),
     (91.44, (3, 0.0)),

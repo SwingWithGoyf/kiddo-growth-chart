@@ -47,7 +47,7 @@ svg { width: 100%; height: auto; display: block; }
            justify-content: space-around; gap: 12px; height: 380px; padding: 10px 6px 0; }
 .figure { display: flex; flex-direction: column; align-items: center; gap: 6px;
           flex: 1; min-width: 0; height: 100%; justify-content: flex-end; }
-/* The portrait never scales with height -- a head is not a body. */
+/* The portrait never scales with height; a head is not a body. */
 .portrait { width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
             border: 2px solid var(--line); background: var(--line); flex: none; }
 .portrait.empty { display: grid; place-items: center; color: var(--muted); font-size: 18px; }

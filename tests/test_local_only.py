@@ -1,9 +1,8 @@
-"""The claim the whole project is chosen for, as a test rather than a promise.
+"""Rendering a chart must make no outbound connection.
 
-Rendering a chart must make **no** outbound connection. Any socket that is not
-loopback fails here, and the assets are scanned for third-party URLs, because a
-single CDN font would quietly make an offline machine the one place this tool
-does not work.
+Any non-loopback socket fails here, and the assets are scanned for third-party
+URLs, since one CDN font would make an offline machine the place this tool does
+not work.
 """
 
 from __future__ import annotations
@@ -61,6 +60,6 @@ def test_no_asset_references_a_third_party_host(path):
 
 
 def test_no_growth_table_is_fetched_at_runtime():
-    """Reference data is vendored or absent -- never downloaded on first run."""
+    """Reference data is vendored or absent, never downloaded on first run."""
     src = (ASSETS.parent / "growth" / "lms.py").read_text(encoding="utf-8")
     assert "urllib" not in src and "requests" not in src and "http" not in src.split('"""')[2]

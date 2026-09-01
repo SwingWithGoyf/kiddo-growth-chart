@@ -1,4 +1,4 @@
-"""Find providers: the in-tree ones, plus anything installed that advertises itself."""
+"""Find providers: the in-tree ones, plus installed packages that advertise one."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def available() -> dict[str, type[PhotoProvider]]:
             continue          # in-tree wins; a plugin cannot silently shadow it
         try:
             found[ep.name] = ep.load()
-        except Exception:      # noqa: BLE001 -- a broken plugin must not break the app
+        except Exception:      # noqa: BLE001; a broken plugin must not break the app
             continue
     return found
 

@@ -1,33 +1,16 @@
-"""Photo sources, behind an interface that is two calls wide.
+"""Photo sources, behind an interface two calls wide::
 
-A photo provider answers two questions and nothing else::
+    people()                         -> identities this source knows about
+    photo_for(person_id, start, end) -> one photo of them in that window
 
-    people()                       -> the identities this source knows about
-    photo_for(person_id, start, end) -> one photo of that person in that window
+Credentials, face clustering and date handling stay inside the adapter.
+``configure(**options)`` receives the user's config, so a provider may take a
+URL or a token without this package knowing such things exist.
 
-Everything source-specific -- credentials, face clustering, whichever endpoint
-carries a trustworthy date -- lives inside the adapter and never leaks past it.
-That seam is the reason this package exists as a package: written straight
-against one photo server, the app absorbs that server's identifiers into its
-core and getting them back out is a rewrite rather than a refactor.
-
-**The face box is optional, and that is load-bearing.** A cropped face is what
-makes a matched-age row read as a comparison instead of four unrelated
-snapshots -- but a plain folder of photos has no faces at all. If the renderer
-*required* a box, the plugin model would be theatre: one real provider and a
-shape nobody else could fill. So ``FaceBox`` may be ``None`` and the renderer
-falls back to a centre crop.
-
-Writing a provider
-------------------
 Subclass :class:`PhotoProvider`, then advertise it::
 
     [project.entry-points."kiddo_growth_chart.providers"]
     myserver = "my_package.provider:MyProvider"
-
-``configure(**options)`` receives whatever the user put in their config, so a
-provider may take a URL or a token without this package knowing such things
-exist.
 """
 
 from __future__ import annotations
@@ -38,10 +21,11 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True, slots=True)
 class FaceBox:
-    """Face rectangle in *fractions* of the image (0-1), not pixels.
+    """Face rectangle in fractions of the image (0-1), not pixels.
 
-    Fractions so a provider can hand back a box measured against a thumbnail and
-    have it stay correct against the full-size original.
+    Fractions so a box measured against a thumbnail stays correct against the
+    full-size original. May be ``None``: a folder of photos has no faces, and
+    the renderer falls back to a centre crop.
     """
 
     x: float
@@ -57,7 +41,7 @@ class FaceBox:
 
 @dataclass(frozen=True, slots=True)
 class Person:
-    """An identity as the *source* understands it. Bound to a kid by the user."""
+    """An identity as the source understands it. Bound to a kid by the user."""
 
     id: str
     name: str
@@ -73,11 +57,10 @@ class Photo:
     full_body: bool = False
     """True when the frame shows the whole child.
 
-    Video mode needs this. Scaling a *face crop* by stature is nonsense -- head
-    size barely changes proportionally after early childhood, so an eight-year
-    -old ends up with a toddler's proportions and the animation looks broken.
-    A provider that cannot tell says ``False`` and the renderer keeps the face
-    at constant size beside an abstract figure.
+    Video mode scales the figure by stature, which is nonsense for a face crop:
+    head size barely changes proportionally after early childhood. A provider
+    that cannot tell says ``False`` and the renderer keeps the face at constant
+    size beside an abstract figure.
     """
 
 
@@ -101,21 +84,17 @@ class PhotoProvider:
     ) -> Photo | None:
         """Best photo of ``person_id`` taken in ``[start, end]``, or ``None``.
 
-        **Returning ``None`` is a first-class answer, not a failure.** Coverage
-        is always thinnest in the earliest years, which is exactly where the
-        matched-age view is most interesting. The caller renders the datapoint
-        with no portrait. A provider must never widen the window on its own to
-        find something: in a graphic whose whole premise is matched age, an
-        off-by-four-years portrait is a lie that reads as data.
+        ``None`` is a real answer: the caller renders the datapoint with no
+        portrait. Never widen the window to find something. In a graphic whose
+        premise is matched age, an off-by-four-years portrait reads as data.
         """
         raise NotImplementedError
 
     def image_bytes(self, photo_id: str) -> tuple[bytes, str]:
-        """Return ``(data, content_type)``. Bytes, so credentials stay server-side.
+        """Return ``(data, content_type)``.
 
-        The app proxies images rather than handing the browser a URL, because a
-        provider's credential must never reach a page that a wall display or a
-        guest's phone can render.
+        Bytes rather than a URL, so a provider's credential stays in this
+        process and never reaches the page.
         """
         raise NotImplementedError
 

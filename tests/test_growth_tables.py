@@ -29,6 +29,5 @@ def test_percentile_must_be_strictly_inside_the_range():
 
 
 def test_no_reference_table_ships_so_bands_stay_off():
-    """Inventing plausible reference values would be worse than shipping none."""
     from kiddo_growth_chart.growth import available_tables
     assert available_tables() == []

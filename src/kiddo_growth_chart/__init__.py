@@ -1,8 +1,7 @@
-"""kiddo-growth-chart -- a bring-your-own-data height chart for kids.
+"""A bring-your-own-data height chart for kids.
 
-Local by construction: the only network traffic this package makes is whatever a
-photo provider you configured makes on your behalf. No CDN, no telemetry, no
-reference data fetched at runtime.
+The only network traffic is whatever a photo provider you configured makes on
+your behalf. No CDN, no telemetry, no reference data fetched at runtime.
 """
 
 from .config import Config

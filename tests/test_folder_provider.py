@@ -31,12 +31,10 @@ def test_year_directory_is_used_when_the_filename_has_no_date(root):
 
 
 def test_a_window_with_no_photo_returns_none_and_never_widens(root):
-    """The wrong year is worse than no portrait in a matched-age graphic."""
     assert FolderProvider(root).photo_for("ada", dt.date(2016, 1, 1), dt.date(2016, 12, 31)) is None
 
 
 def test_this_provider_reports_no_faces(root):
-    """The interface must stay usable by a source that knows nothing about faces."""
     p = FolderProvider(root).photo_for("ada", dt.date(2019, 1, 1), dt.date(2019, 12, 31))
     assert p.face is None and p.full_body is False
 
@@ -53,8 +51,8 @@ def test_unknown_person_is_none_not_an_error(root):
 
 
 def test_a_guessed_year_date_never_outranks_a_real_filename_date(root):
-    """A year-dir date is pinned to mid-year, so nearness alone would always
-    hand the window to the file whose date is least known."""
+    """A year-dir date is pinned to mid-year, so nearness alone would hand the
+    window to the file whose date is least known."""
     p = FolderProvider(root)
     assert p._date_of(root / "ada" / "2019" / "ada-2019-04-11.png")[1] == 2
     assert p._date_of(root / "ada" / "2019" / "no-date-here.png")[1] == 1

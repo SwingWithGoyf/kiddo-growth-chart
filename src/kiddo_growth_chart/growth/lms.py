@@ -1,25 +1,17 @@
-"""Percentile bands from LMS parameters. Computed locally, from vendored tables.
+"""Percentile bands from LMS parameters, computed locally from vendored tables.
 
-Reference growth data (CDC stature-for-age 2-20, WHO length/height-for-age under
-2) is published as **LMS parameters** -- a skewness ``L``, median ``M`` and
-coefficient of variation ``S`` per sex per age -- from which any percentile is
-arithmetic::
+Reference growth data (CDC stature-for-age 2-20, WHO length/height-for-age
+under 2) is published as a skewness ``L``, median ``M`` and coefficient of
+variation ``S`` per sex per age, from which any percentile is arithmetic::
 
     X = M (1 + L S Z)^(1/L)      for L != 0
     X = M exp(S Z)               for L == 0
 
-So bands need no API, no key, and no network. **Tables are vendored into the
-repo, never fetched at runtime**: a first-run download would break the
-local-only promise on precisely the machine that chose this tool for it.
-
-No table ships in this scaffold. ``tables/`` documents the expected CSV columns
-and where to get the data; until a file is dropped in, band rendering is simply
-off. That is deliberate -- inventing plausible-looking reference values would be
-worse than having none, since a wrong percentile is a medical-sounding claim.
-
-Bands default to **off** in the UI regardless. A family keepsake and a growth
-percentile are different objects, and the second one turns a chart on the wall
-into something a parent can worry at.
+Tables are vendored, never fetched at runtime: a first-run download would break
+the local-only promise on the machine most likely to want it. None ships here,
+so bands stay off until a file is dropped into ``tables/``. Inventing plausible
+reference values would be worse than shipping none, since a wrong percentile is
+a medical-sounding claim. Bands default to off in the UI regardless.
 """
 
 from __future__ import annotations
@@ -51,7 +43,7 @@ class LMSTable:
         return sorted((r for r in self.rows if r.sex == sex), key=lambda r: r.age_days)
 
     def at(self, sex: str, age_days: float) -> LMSRow | None:
-        """Nearest row by age. Tables are dense (monthly), so nearest is honest."""
+        """Nearest row by age. Tables are monthly, so nearest is close enough."""
         rows = self.for_sex(sex)
         if not rows:
             return None
@@ -84,7 +76,7 @@ def _normal_cdf(z: float) -> float:
 
 
 def _z_from_percentile(p: float) -> float:
-    """Inverse normal CDF by bisection -- exact enough, and keeps scipy out."""
+    """Inverse normal CDF by bisection: exact enough, and keeps scipy out."""
     lo, hi = -6.0, 6.0
     for _ in range(200):
         mid = (lo + hi) / 2

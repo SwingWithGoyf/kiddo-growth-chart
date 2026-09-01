@@ -1,27 +1,17 @@
-"""Photos from a directory tree. The reference provider, and the honest default.
+"""Photos from a directory tree. The reference provider.
 
 Layout::
 
     <root>/<person>/<anything>-2019-04-11.jpg
     <root>/<person>/2019/whatever.jpg
 
-Dates come from the filename where one is present, else the enclosing year
-directory, else the file's modification time -- in that order, because an mtime
-is the weakest of the three (a copy or a sync rewrites it, silently redating a
-2009 photo to whenever the drive was last touched).
+Dates come from the filename, else the enclosing year directory, else mtime.
+An mtime is weakest: a copy or a sync rewrites it, redating a 2009 photo to
+whenever the drive was last touched.
 
-**Confidence outranks closeness when choosing between candidates.** A date
-guessed from a year directory is pinned to mid-year, which puts it exactly at
-the centre of a calendar-year window -- so ranking purely by nearness would let
-the weakest provenance win every time it competed with a real filename date.
-Candidates are sorted by how well the date is known first, and only then by
-distance from the middle of the window.
-
-This provider exists to keep the interface honest. An abstraction validated
-against a single implementation is not an abstraction, and this is the one that
-proves a source with **no faces and no server** can still drive every view: it
-returns ``face=None`` throughout, so anything that renders correctly here
-renders correctly for the minimal case.
+Confidence outranks closeness when picking between candidates. A year-directory
+date is pinned to mid-year, landing dead centre of a calendar-year window, so
+ranking by nearness alone would hand every contest to the weakest provenance.
 """
 
 from __future__ import annotations
@@ -73,7 +63,7 @@ class FolderProvider(PhotoProvider):
             if dated and start <= dated[0] <= end:
                 candidates.append((*dated, f))
         if not candidates:
-            return None      # never widen the window -- see PhotoProvider.photo_for
+            return None      # never widen the window; see PhotoProvider.photo_for
 
         # Middle of the window, so "age 8" gets a photo from the middle of being
         # eight rather than the day after the birthday.
@@ -118,8 +108,7 @@ class FolderProvider(PhotoProvider):
         """Return ``(date, confidence)``; higher confidence is a better-known date.
 
         2 = stated in the filename, 1 = a year directory (day unknown, pinned to
-        mid-year), 0 = mtime, which is a fact about the filesystem rather than
-        about the photograph.
+        mid-year), 0 = mtime, a fact about the filesystem rather than the photo.
         """
         if m := _DATE_IN_NAME.search(path.stem):
             digits = re.sub(r"[-_]", "", m.group(0))

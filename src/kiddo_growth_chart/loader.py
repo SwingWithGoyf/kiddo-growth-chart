@@ -1,11 +1,7 @@
 """Read and validate a dataset file.
 
-JSON, not YAML, so the package has no parser dependency and the file is
-trivially machine-written by whatever import script a user ends up with.
-
-Validation is loud on purpose. A silently-dropped measurement is invisible on a
-chart -- the line just goes somewhere else -- so every problem raises with the
-kid and the index that caused it.
+Every problem raises, naming the kid and index that caused it: a dropped
+measurement is invisible on a chart, the line just goes somewhere else.
 """
 
 from __future__ import annotations
@@ -56,8 +52,7 @@ def parse(raw: dict) -> Dataset:
             when = _date(m["date"], f"{mwhere}.date")
             if when < dob:
                 raise DatasetError(
-                    f"{mwhere}: measured {when} before date of birth {dob} -- "
-                    "a negative age would plot off the left of the age view"
+                    f"{mwhere}: measured {when} before date of birth {dob}"
                 )
             if "value" in m:
                 try:
@@ -86,7 +81,7 @@ def parse(raw: dict) -> Dataset:
                  if [x.date for x in measurements].count(d) > 1}
         if dupes:
             raise DatasetError(
-                f"{where}: two measurements on {sorted(dupes)[0]} -- "
+                f"{where}: two measurements on {sorted(dupes)[0]}; "
                 "the chart cannot draw two heights on one date"
             )
 
@@ -107,11 +102,10 @@ def parse(raw: dict) -> Dataset:
 
 
 def load(path: str | os.PathLike | None = None) -> Dataset:
-    """Load the dataset named by ``path``, else ``$KIDDO_DATASET``, else the sample.
+    """Load the dataset at ``path``, else ``$KIDDO_DATASET``, else the sample.
 
-    The fallback to the sample is deliberate: a fresh clone runs and renders
-    something before anyone has written a config, which is what makes the
-    bring-your-own-data promise checkable rather than a claim in a README.
+    Falling back to the sample is what lets a fresh clone render before anyone
+    has written a config.
     """
     if path is None:
         path = os.environ.get(ENV_VAR) or sample_path()

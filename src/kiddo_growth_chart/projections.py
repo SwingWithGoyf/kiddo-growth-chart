@@ -1,15 +1,10 @@
-"""The two views -- and they are one dataset seen through two clocks.
-
-View 1 (calendar clock) plots x = the date measured. View 2 (age clock) plots
-x = ``date - dob``, superimposing four childhoods so "how did each compare at
-age 8" becomes readable. That is the entire difference: **one series store, two
-projections.** Video mode is the same pair again with time driving the frames
-rather than the x-axis, so it lives on this module too.
+"""One dataset, two clocks: x is the date measured, or x is ``date - dob``.
 
 Nothing here interpolates. Segments join consecutive measurements as straight
-lines because a spline through four points a year apart invents the *shape* of a
-spurt that was never measured -- and a segment spanning two different methods is
-flagged so the renderer can draw it as the guess it is.
+lines, since a spline through points a year apart invents the shape of a spurt
+nobody measured, and a segment spanning two methods is flagged so the renderer
+can draw it as the guess it is. Video mode is the same pair of projections with
+time driving frames rather than the x-axis, so it lives here too.
 """
 
 from __future__ import annotations
@@ -33,7 +28,7 @@ class Point:
     date: dt.date
     age_days: int
     method: str
-    label_x: str             # what the axis would call this x
+    label_x: str             # what the axis calls this x
 
     @property
     def age_years(self) -> float:
@@ -44,7 +39,7 @@ class Point:
 class Segment:
     a: Point
     b: Point
-    mixed_method: bool       # endpoints measured differently -> render as uncertain
+    mixed_method: bool       # endpoints measured differently; render as uncertain
 
     @property
     def cm_gained(self) -> float:
@@ -112,7 +107,7 @@ def project(dataset: Dataset, clock: Clock | str = Clock.DATE) -> Projection:
         xs.extend(p.x for p in pts)
         cms.extend(p.cm for p in pts)
 
-    if not xs:                      # an empty dataset must not crash the renderer
+    if not xs:                      # an empty dataset must still be drawable
         return Projection(clock, tuple(series), 0.0, 1.0, 0.0, 1.0)
 
     pad = max((max(cms) - min(cms)) * 0.08, 2.0)
@@ -128,10 +123,10 @@ def project(dataset: Dataset, clock: Clock | str = Clock.DATE) -> Projection:
 
 @dataclass(frozen=True, slots=True)
 class Frame:
-    """One step of video mode: who is how tall at this instant, and who just grew.
+    """One step of video mode: who is how tall now, and who just grew.
 
-    ``grew`` is what springs. It holds the kids whose measurement lands on this
-    frame, so the animation asserts growth only where a measurement exists.
+    ``grew`` holds the kids whose measurement lands on this frame, and is what
+    springs, so the animation asserts growth only where a measurement exists.
     """
 
     index: int
@@ -143,16 +138,12 @@ class Frame:
 
 
 def frames(dataset: Dataset, clock: Clock | str = Clock.DATE) -> tuple[Frame, ...]:
-    """Discrete frames for video mode -- one per real measurement date.
+    """Discrete frames for video mode, one per real measurement date.
 
-    **Every kid does not spring on the same beat.** Visit dates differ, so a
-    shared annual step would assert that four children grew at the same moment.
-    Frames are cut at the dates that actually exist, each frame naming exactly
-    who changed; on the age clock the cut is at ages, which is what makes the
-    four childhoods play in parallel from birth.
-
-    A kid with no measurement on a frame **holds** their last known height. That
-    is the honest render of "not measured" -- not a vanish, and not a drift.
+    Visit dates differ, so a shared annual step would assert that four children
+    grew at the same moment. Frames are cut at the dates that exist, each naming
+    who changed. A kid with no measurement on a frame holds their last known
+    height rather than vanishing or drifting.
     """
     clock = Clock(clock) if not isinstance(clock, Clock) else clock
     proj = project(dataset, clock)

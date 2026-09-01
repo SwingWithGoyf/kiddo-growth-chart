@@ -43,7 +43,6 @@ def test_empty_dataset_yields_a_drawable_projection_not_a_crash():
 
 
 def test_frames_cut_at_real_dates_and_never_spring_everyone_together():
-    """Visit dates differ, so a shared beat would assert simultaneous growth."""
     fs = frames(parse(TWO_KIDS), Clock.DATE)
     assert [f.grew for f in fs] == [("a",), ("a",), ("b",)]
     assert all(len(f.grew) == 1 for f in fs)
