@@ -1,10 +1,9 @@
 /* Renderer: two projections of one dataset, plus discrete video mode.
  *
- * Nothing in here interpolates a height. The chart joins measurements with
- * straight segments; video mode holds a value until the next measurement and
- * then springs to it. The spring is the only animation, and it is applied to
- * the *figure* -- never to the ruler or the readout, because the peak of an
- * overshoot is a height that never existed. */
+ * Nothing here interpolates a height. Video mode holds a value until the next
+ * measurement and then springs to it, and the spring moves the figure only:
+ * the peak of an overshoot is a height that never existed, so the ruler and
+ * the readout snap. */
 (() => {
   "use strict";
   const PALETTE = ["var(--k0)", "var(--k1)", "var(--k2)", "var(--k3)"];
@@ -19,8 +18,7 @@
 
   const fmt = (cm) => {
     if (!state.imperial) return cm.toFixed(1) + " cm";
-    // Round the inches BEFORE splitting, or 59.96in prints as 4'12.0" -- the
-    // remainder rounds up to a full foot and the feet never learn about it.
+    // Round the inches before splitting, or 59.96in prints as 4'12.0".
     const tenths = Math.round((cm / CM_PER_IN) * 10);
     return `${Math.floor(tenths / 120)}′${((tenths % 120) / 10).toFixed(1)}″`;
   };
@@ -93,9 +91,8 @@
       if (last) labels.push({ name: s.name, x: xs(last.x) + 9, y: ys(last.cm) + 4, fill: stroke });
     });
 
-    // On the age clock the four lines converge, so end-labels land on top of
-    // each other and on the lines. Push them apart vertically before drawing --
-    // an unreadable label is the same defect as a missing one.
+    // On the age clock the lines converge, so end-labels land on top of each
+    // other. Push them apart vertically before drawing.
     labels.sort((a, b) => a.y - b.y);
     const MIN_GAP = 15;
     for (let i = 1; i < labels.length; i++) {
@@ -126,10 +123,9 @@
   }
 
   /* ---- video ------------------------------------------------------------ */
-  /* Pixels per cm is FIXED for the whole run, never per-frame.
-   * Normalising each frame to the tallest kid in it makes a year where
-   * everyone grows look like a year where nobody did -- which is the one thing
-   * this view exists to show. */
+  /* Pixels per cm is fixed for the whole run, never per-frame. Normalising each
+   * frame to the tallest kid makes a year where everyone grows look like a year
+   * where nobody did. */
   const STAGE_PX = 300;
   const scale = () => STAGE_PX / Math.max(state.data.cm.max, 1);
 
@@ -179,7 +175,7 @@
       const readout = fig.querySelector('[data-role="readout"]');
       if (cm == null) { fig.style.visibility = "hidden"; return; }
       fig.style.visibility = "visible";
-      // The readout SNAPS. Only the drawn body is allowed to overshoot.
+      // The readout snaps; only the drawn body may overshoot.
       readout.textContent = fmt(cm);
       const sprang = f.grew.includes(key);
       body.style.transition = "none";
@@ -197,8 +193,8 @@
     });
   }
 
-  /* A 404 is a real answer: no photo of this kid in this window. Show the
-   * datapoint without a portrait rather than reaching for the wrong year. */
+  /* A 404 means no photo of this kid in this window. Show the datapoint
+   * without a portrait rather than reaching for the wrong year. */
   function loadPortrait(fig, key, isoDate) {
     if (!isoDate) return;
     const year = isoDate.slice(0, 4);
@@ -209,8 +205,8 @@
     img.alt = "";
     img.onload = () => {
       if (slot.dataset.year !== year) return;
-      // `dataset` is read-only -- assigning the object silently throws and the
-      // portrait never lands. Set the individual keys.
+      // `dataset` is read-only; assigning the object throws and the portrait
+      // never lands. Set the keys individually.
       img.className = "portrait";
       img.dataset.role = "portrait";
       img.dataset.year = year;

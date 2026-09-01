@@ -1,16 +1,13 @@
 """Flask blueprint, plus a standalone app for people who just want to run it.
 
-A **blueprint** rather than an application is the whole point of the split: an
-existing site mounts it at a path it already serves, which costs no new port and
-no new firewall or ACL grant, while the package stays independently installable
-and runnable::
+A blueprint so an existing site can mount it at a path it already serves, with
+no new port and no new firewall grant::
 
     from kiddo_growth_chart.web import blueprint
     app.register_blueprint(blueprint(config), url_prefix="/heights")
 
-Images are **proxied**, never linked. A provider's credential stays in this
-process; handing the browser a source URL would leak it to every device that
-renders the page.
+Images are proxied, never linked, so a provider's credential stays in this
+process rather than reaching every device that renders the page.
 """
 
 from __future__ import annotations
@@ -91,9 +88,8 @@ def blueprint(config: Config | None = None) -> Blueprint:
         try:
             dataset = load(config.dataset)
         except DatasetError as exc:
-            # Say what is wrong. An empty chart and a broken config must never
-            # look the same -- that failure mode is how a dead widget survives
-            # on a wall for a week.
+            # An empty chart and a broken config must not look the same, or a
+            # dead widget survives on a wall for a week.
             return render_template("error.html", message=str(exc)), 500
         return render_template(
             "chart.html",
@@ -115,9 +111,8 @@ def blueprint(config: Config | None = None) -> Blueprint:
     def photo(kid_key: str, year: int):
         """One photo of this kid taken in this calendar year, or 404.
 
-        404 is a real answer: coverage is thinnest in the earliest years, and
-        the caller draws the datapoint without a portrait rather than reaching
-        for a photo from the wrong age.
+        404 is a real answer; the caller draws the datapoint without a portrait
+        rather than reaching for a photo from the wrong age.
         """
         try:
             dataset = load(config.dataset)
@@ -152,9 +147,8 @@ def blueprint(config: Config | None = None) -> Blueprint:
     def providers():
         """What sources are installed, and what identities the active one knows.
 
-        This is the binding screen's data: kid -> person is a decision a human
-        makes once, and it must be made against names the source actually
-        reports rather than guessed.
+        Data for the binding screen: kid -> person is a decision a human makes
+        once, against the names the source reports rather than a guess.
         """
         p = provider()
         return jsonify(

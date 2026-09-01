@@ -1,4 +1,4 @@
-"""Runtime configuration. The app knows nothing until it is pointed at something."""
+"""Runtime configuration."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class Config:
     dataset: str | None = None          # path; None -> $KIDDO_DATASET -> sample
     provider: str = "none"
     provider_options: dict = field(default_factory=dict)
-    units: str = "imperial"             # "imperial" | "metric" -- display only
-    show_percentile_bands: bool = False  # off by default, deliberately
+    units: str = "imperial"             # "imperial" | "metric"; display only
+    show_percentile_bands: bool = False  # off by default
 
     @classmethod
     def load(cls, path: str | os.PathLike | None = None) -> "Config":

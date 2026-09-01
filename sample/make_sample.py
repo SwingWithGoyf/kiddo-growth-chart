@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 """Regenerate the sample dataset and its placeholder photos.
 
-Everyone in here is invented. This file exists so the repo can ship something
-that renders on a fresh clone -- README screenshots, a UI to click, tests with
-real shapes -- without any real child's name, birthday or clinical measurement
-ever entering git history.
-
-Placeholder images are written as PNGs by hand (zlib + struct) rather than
-pulled from a library, keeping the sample generator dependency-free.
+Everyone here is invented, so the repo ships something that renders on a fresh
+clone without a real child's name, birthday or measurement entering git
+history. PNGs are written by hand (zlib + struct) to keep this dependency-free.
 """
 
 from __future__ import annotations
@@ -31,14 +27,14 @@ TINT = {"ada": (0xC8, 0xDC, 0xF0), "bram": (0xF4, 0xDF, 0xC4),
         "cleo": (0xC9, 0xE8, 0xDF), "dov": (0xE2, 0xD3, 0xEE)}
 TODAY = dt.date(2026, 8, 30)
 
-# Visit offsets from the birthday, in days. Deliberately NOT zero: well-child
+# Visit offsets from the birthday, in days. Non-zero on purpose: well-child
 # visits cluster near a birthday without landing on it, and the sample should
 # exercise the age arithmetic rather than flatter it.
 OFFSETS = [11, -6, 23, 4, -18, 31, 9, -12, 27, 2, 17, -9, 21, 6, 14, -3, 19]
 
 
 def height_cm(base: float, rate: float, spurt: int, age: float) -> float:
-    """Plausible stature. Not a growth reference -- invented, and only shaped."""
+    """Plausible stature. Invented and only roughly shaped, not a reference."""
     cm = base + rate * (age - 1)
     if age > spurt:                       # a couple of fast years, then a taper
         cm += min(age - spurt, 3) * 2.6
@@ -59,9 +55,8 @@ def build() -> dict:
             if when > TODAY:
                 break
             cm = height_cm(base, rate, spurt, age)
-            # Most points are clinical. Two are not, on purpose: they make the
-            # dashed mixed-method segment and the hollow marker visible in the
-            # sample instead of only in a test.
+            # Two non-clinical points, so the dashed mixed-method segment and
+            # the hollow marker show up in the sample and not only in a test.
             method = "clinical"
             if key == "ada" and age == 9:
                 method, cm = "doorframe", cm + 1.8      # marks read high
@@ -107,8 +102,8 @@ def main() -> None:
 
     photos = HERE / "photos"
     for kid in data["kids"]:
-        # Not every year gets a photo. Coverage is always lumpy, and the sample
-        # must exercise the missing-portrait path rather than hide it.
+        # Not every year gets a photo, so the sample exercises the
+        # missing-portrait path.
         years = sorted({m["date"][:4] for m in kid["measurements"]})
         for i, year in enumerate(years):
             if i % 3 == 2:
