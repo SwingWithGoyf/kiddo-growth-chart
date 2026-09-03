@@ -18,6 +18,7 @@ dev = ["pytest>=8"]
 # themselves here; see docs in providers/__init__.py.
 [project.entry-points."kiddo_growth_chart.providers"]
 folder = "kiddo_growth_chart.providers.folder:FolderProvider"
+immich = "kiddo_growth_chart.providers.immich:ImmichProvider"
 
 [project.scripts]
 kiddo-growth-chart = "kiddo_growth_chart.__main__:main"

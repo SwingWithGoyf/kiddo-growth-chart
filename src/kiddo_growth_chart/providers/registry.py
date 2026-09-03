@@ -6,12 +6,14 @@ from importlib.metadata import entry_points
 
 from . import NullProvider, PhotoProvider
 from .folder import FolderProvider
+from .immich import ImmichProvider
 
 ENTRY_POINT_GROUP = "kiddo_growth_chart.providers"
 
 _BUILTIN: dict[str, type[PhotoProvider]] = {
     NullProvider.name: NullProvider,
     FolderProvider.name: FolderProvider,
+    ImmichProvider.name: ImmichProvider,
 }
 
 
