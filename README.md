@@ -65,10 +65,34 @@ people()                          # identities this source knows about
 photo_for(person_id, start, end)  # one photo of them in that window, or None
 ```
 
-`folder` ships in the box and reads `<root>/<person>/<year>/*.jpg`, taking dates
-from the filename, else the year directory, else mtime — preferring whichever is
-best known rather than whichever is nearest, so a date guessed from a folder
-never outranks one stated in a filename.
+Two ship in the box.
+
+`folder` reads `<root>/<person>/<year>/*.jpg`, taking dates from the filename,
+else the year directory, else mtime — preferring whichever is best known rather
+than whichever is nearest, so a date guessed from a folder never outranks one
+stated in a filename.
+
+`immich` talks to an [Immich](https://immich.app) server. A kid's
+`photo_person_id` is an Immich person UUID, and because Immich stores a bounding
+box per detected face, this provider fills in the face box that `folder` cannot.
+Point it at a server and an API key from Account Settings → API Keys:
+
+```json
+{
+  "provider": "immich",
+  "provider_options": {
+    "url": "https://immich.example.com",
+    "api_key_env": "IMMICH_API_KEY"
+  }
+}
+```
+
+Run with `--config that.json`. The key is read from the environment so it stays
+out of the file; `api_key` sets it inline instead. A rejected key raises rather
+than returning `None`, because "no photo of this kid that year" is exactly how a
+misconfiguration would otherwise hide behind a plausible chart. Timeouts and
+server errors do return `None`. Visit `/providers.json` to list the person UUIDs
+to bind your kids to.
 
 Write your own by subclassing `PhotoProvider` and advertising it:
 
