@@ -42,6 +42,26 @@ def test_unknown_method_names_the_known_ones():
                                            "method": "eyeballed"}]}]})
 
 
+def test_an_interpolated_point_is_not_a_measurement():
+    """It must never pass for one: the renderer draws it hollow on that basis."""
+    d = parse({"kids": [{"key": "a", "name": "A", "dob": "2016-01-01", "measurements": [
+        {"date": "2020-01-01", "cm": 100, "method": "clinical"},
+        {"date": "2022-07-01", "cm": 115, "method": "interpolated"},
+        {"date": "2024-01-01", "cm": 130, "method": "clinical"}]}]})
+    kid = d.by_key("a")
+    assert [m.method.is_measured for m in kid.measurements] == [True, False, True]
+    assert kid.mixed_methods is True      # so the legend says so
+
+
+def test_a_filled_gap_dashes_the_segments_on_both_sides_of_it():
+    from kiddo_growth_chart.projections import project
+    d = parse({"kids": [{"key": "a", "name": "A", "dob": "2016-01-01", "measurements": [
+        {"date": "2020-01-01", "cm": 100, "method": "clinical"},
+        {"date": "2022-07-01", "cm": 115, "method": "interpolated"},
+        {"date": "2024-01-01", "cm": 130, "method": "clinical"}]}]})
+    assert [s.mixed_method for s in project(d).series[0].segments] == [True, True]
+
+
 def test_mixed_methods_is_visible_on_the_kid():
     d = parse({"kids": [{"key": "a", "name": "A", "dob": "2016-01-01", "measurements": [
         {"date": "2020-01-01", "cm": 100, "method": "clinical"},

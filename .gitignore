@@ -11,3 +11,4 @@ venv/
 # the tree (KIDDO_DATASET) and keep sample/ the only data committed.
 /data/
 *.local.json
+.growth-data

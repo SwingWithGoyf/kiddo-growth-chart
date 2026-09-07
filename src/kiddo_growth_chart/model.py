@@ -27,11 +27,17 @@ class Method(enum.Enum):
     HOME_BAREFOOT = "home_barefoot"
     HOME_SHOES = "home_shoes"
     DOORFRAME = "doorframe"         # transcribed pencil marks
+    INTERPOLATED = "interpolated"   # derived to fill a gap; nobody measured this
     UNKNOWN = "unknown"
 
     @property
     def is_clinical(self) -> bool:
         return self is Method.CLINICAL
+
+    @property
+    def is_measured(self) -> bool:
+        """False for a value nobody took, however plausible it looks."""
+        return self is not Method.INTERPOLATED
 
 
 class Unit(enum.Enum):
