@@ -13,6 +13,9 @@
    * most frames find one, and the date is printed under every portrait, so a
    * photo three months off says so rather than implying the frame's month. */
   const PHOTO_WINDOW_DAYS = 120;
+  /* Past this far from the frame, the caption is marked rather than just
+   * stated -- a portrait riding a long gap should look like one. */
+  const STALE_AFTER_DAYS = 150;
   const MONTH = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const base = document.currentScript.src.replace(/\/static\/.*$/, "");
   const $ = (id) => document.getElementById(id);
@@ -216,10 +219,14 @@
     return isNaN(d) ? null : d.toISOString().slice(0, 10);
   }
 
-  /* A 404 means no photo of this kid in this window. Empty the slot rather
-   * than leaving the previous portrait up: a face held over from an earlier
-   * frame would read as this frame's, which is the one thing a matched-age
-   * row must not do. */
+  /* A 404 means no photo of this kid in this window, and the last one holds.
+   *
+   * Blanking was the earlier behaviour, on the grounds that a held-over face
+   * reads as this frame's. The caption is what changes that: it names the date
+   * the photo was taken, so a portrait riding through a thin patch says how
+   * stale it is rather than implying the moment on screen. Grayson has no
+   * photo between Aug 2019 and Feb 2021 -- eleven blank frames, against one
+   * portrait captioned Aug 2019 while the readout keeps climbing. */
   async function loadPortrait(fig, key, isoDate) {
     const slot = fig.querySelector('[data-role="portrait"]');
     const cap = fig.querySelector('[data-role="when"]');
@@ -235,17 +242,24 @@
                 + `?window=${PHOTO_WINDOW_DAYS}`;
       const res = await fetch(url, { credentials: "same-origin" });
       if (slot.dataset.when !== stamp) return;   // a later frame overtook us
-      if (!res.ok) return clearPortrait(slot, cap);
+      if (!res.ok) return holdPortrait(slot, cap);
       const taken = res.headers.get("X-Photo-Taken") || "";
       const blob = await res.blob();
       if (slot.dataset.when !== stamp) return;
-      showPortrait(slot, cap, blob, taken);
+      showPortrait(slot, cap, blob, taken, isoDate);
     } catch {
-      clearPortrait(slot, cap);
+      holdPortrait(slot, cap);
     }
   }
 
-  function showPortrait(slot, cap, blob, taken) {
+  /* Keep whatever is already showing. Only a figure that has never had a
+   * portrait falls back to the placeholder dot. */
+  function holdPortrait(slot, cap) {
+    if (slot.querySelector("img")) return;
+    clearPortrait(slot, cap);
+  }
+
+  function showPortrait(slot, cap, blob, taken, asked) {
     const img = new Image();
     img.alt = "";
     img.src = URL.createObjectURL(blob);
@@ -256,11 +270,15 @@
       slot.textContent = "";
       slot.appendChild(img);
     };
-    // The portrait's OWN date, not the frame's. The window is months wide, so
-    // without this the picture silently claims to be from the moment shown.
+    // The portrait's OWN date, not the frame's. The window is months wide and
+    // a portrait may ride through a gap, so without this the picture silently
+    // claims to be from the moment shown.
     cap.textContent = taken
       ? `${MONTH[Number(taken.slice(5, 7)) - 1]} ${taken.slice(0, 4)}`
       : "";
+    const drift = taken && asked
+      ? Math.abs(Date.parse(taken) - Date.parse(asked)) / DAY_MS : 0;
+    cap.classList.toggle("is-stale", drift > STALE_AFTER_DAYS);
   }
 
   function clearPortrait(slot, cap) {
