@@ -136,8 +136,11 @@ class ImmichProvider(PhotoProvider):
     def photo_for(self, person_id, start, end, prefer_full_body=False) -> Photo | None:
         if not self.base or not self.api_key or not UUID.match(person_id or ""):
             return None
+        # The tag settings belong in the key: they change which photo comes
+        # back, so two differently-configured providers in one process must
+        # not read each other's answers.
         return _cached(
-            (self.base, person_id, start, end),
+            (self.base, person_id, start, end, self.tag, self.tag_only),
             lambda: self._search(person_id, start, end),
         )
 

@@ -265,6 +265,26 @@ def test_no_tag_configured_means_no_tags_request_at_all(server, provider):
     assert not any("/tags" in c[1] for c in server.calls)
 
 
+def test_the_cache_does_not_confuse_two_differently_tagged_providers(server):
+    """The tag changes which photo comes back, so it belongs in the key."""
+    _tagged(server, [_asset("2019-06-01T09:00:00.000Z", ASSET)],
+                    [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    strict = ImmichProvider(url="https://immich.test", api_key="k",
+                            tag="growth chart", tag_only=True)
+    loose = ImmichProvider(url="https://immich.test", api_key="k",
+                           tag="growth chart")
+    window = (dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+    assert strict.photo_for(PERSON, *window).id == ASSET
+    assert loose.photo_for(PERSON, *window).id == ASSET
+
+    _tagged(server, [], [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    server.route_search = (
+        lambda b: [] if b.get("tagIds") else [_asset("2019-06-28T09:00:00.000Z", OTHER)]
+    )
+    bare = ImmichProvider(url="https://immich.test", api_key="k")
+    assert bare.photo_for(PERSON, *window).id == OTHER      # not the tagged hit
+
+
 def test_repeated_windows_are_served_from_cache(server, provider):
     server.routes["/search/metadata"] = {"assets": {"items": [_asset()]}}
     server.routes["/faces"] = []
