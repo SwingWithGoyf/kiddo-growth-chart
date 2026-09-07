@@ -8,6 +8,12 @@
   "use strict";
   const PALETTE = ["var(--k0)", "var(--k1)", "var(--k2)", "var(--k3)"];
   const CM_PER_IN = 2.54;
+  const DAY_MS = 86400000;
+  /* How far either side of a frame a portrait may come from. Wide enough that
+   * most frames find one, and the date is printed under every portrait, so a
+   * photo three months off says so rather than implying the frame's month. */
+  const PHOTO_WINDOW_DAYS = 120;
+  const MONTH = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const base = document.currentScript.src.replace(/\/static\/.*$/, "");
   const $ = (id) => document.getElementById(id);
 
@@ -152,6 +158,7 @@
       fig.dataset.key = s.key;
       fig.innerHTML =
         `<div class="portrait empty" data-role="portrait">·</div>` +
+        `<div class="portrait-when" data-role="when"></div>` +
         `<div class="readout" data-role="readout"></div>` +
         `<div class="body" data-role="body" style="background:${colorOf(s.key)}"></div>` +
         `<div class="who">${s.name}</div>`;
@@ -189,31 +196,78 @@
       } else {
         body.style.transform = "scaleY(1)";
       }
-      loadPortrait(fig, key, f.dates[key]);
+      loadPortrait(fig, key, portraitDate(key, f));
     });
   }
 
-  /* A 404 means no photo of this kid in this window. Show the datapoint
-   * without a portrait rather than reaching for the wrong year. */
-  function loadPortrait(fig, key, isoDate) {
-    if (!isoDate) return;
-    const year = isoDate.slice(0, 4);
+  /* The calendar date a portrait should come from for this frame.
+   *
+   * On the calendar clock that is the frame's own moment, shared by everyone.
+   * On the age clock it is each kid's OWN date at that age -- the view
+   * superimposes four childhoods, so "age 8" must fetch each child at eight,
+   * not all four in whichever year the frame happens to sit. */
+  function portraitDate(key, frame) {
+    const s = state.data.series.find((x) => x.key === key);
+    if (!s) return null;
+    const ms = state.clock === "age"
+      ? Date.parse(`${s.dob}T00:00:00Z`) + frame.x * DAY_MS
+      : frame.x * DAY_MS;
+    const d = new Date(ms);
+    return isNaN(d) ? null : d.toISOString().slice(0, 10);
+  }
+
+  /* A 404 means no photo of this kid in this window. Empty the slot rather
+   * than leaving the previous portrait up: a face held over from an earlier
+   * frame would read as this frame's, which is the one thing a matched-age
+   * row must not do. */
+  async function loadPortrait(fig, key, isoDate) {
     const slot = fig.querySelector('[data-role="portrait"]');
-    if (slot.dataset.year === year) return;
-    slot.dataset.year = year;
+    const cap = fig.querySelector('[data-role="when"]');
+    if (!isoDate) return clearPortrait(slot, cap);
+    // One fetch per month, not per frame; several frames can land in the same
+    // month and they would otherwise refetch the same photo.
+    const stamp = isoDate.slice(0, 7);
+    if (slot.dataset.when === stamp) return;
+    slot.dataset.when = stamp;
+
+    try {
+      const url = `${base}/photo/${encodeURIComponent(key)}/${isoDate}`
+                + `?window=${PHOTO_WINDOW_DAYS}`;
+      const res = await fetch(url, { credentials: "same-origin" });
+      if (slot.dataset.when !== stamp) return;   // a later frame overtook us
+      if (!res.ok) return clearPortrait(slot, cap);
+      const taken = res.headers.get("X-Photo-Taken") || "";
+      const blob = await res.blob();
+      if (slot.dataset.when !== stamp) return;
+      showPortrait(slot, cap, blob, taken);
+    } catch {
+      clearPortrait(slot, cap);
+    }
+  }
+
+  function showPortrait(slot, cap, blob, taken) {
     const img = new Image();
     img.alt = "";
+    img.src = URL.createObjectURL(blob);
     img.onload = () => {
-      if (slot.dataset.year !== year) return;
-      // `dataset` is read-only; assigning the object throws and the portrait
-      // never lands. Set the keys individually.
-      img.className = "portrait";
-      img.dataset.role = "portrait";
-      img.dataset.year = year;
-      slot.replaceWith(img);
+      if (slot.dataset.url) URL.revokeObjectURL(slot.dataset.url);
+      slot.dataset.url = img.src;
+      slot.className = "portrait";
+      slot.textContent = "";
+      slot.appendChild(img);
     };
-    img.onerror = () => { slot.className = "portrait empty"; slot.textContent = "·"; };
-    img.src = `${base}/photo/${encodeURIComponent(key)}/${year}`;
+    // The portrait's OWN date, not the frame's. The window is months wide, so
+    // without this the picture silently claims to be from the moment shown.
+    cap.textContent = taken
+      ? `${MONTH[Number(taken.slice(5, 7)) - 1]} ${taken.slice(0, 4)}`
+      : "";
+  }
+
+  function clearPortrait(slot, cap) {
+    if (slot.dataset.url) { URL.revokeObjectURL(slot.dataset.url); delete slot.dataset.url; }
+    slot.className = "portrait empty";
+    slot.textContent = "·";
+    cap.textContent = "";
   }
 
   function play(on) {

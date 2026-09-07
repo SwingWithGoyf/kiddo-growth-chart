@@ -48,6 +48,35 @@ def test_a_broken_dataset_says_so_instead_of_drawing_an_empty_chart(tmp_path):
     assert r.status_code == 500 and b"missing" in r.data
 
 
+def test_a_date_asks_for_a_window_around_it_not_the_whole_year(client):
+    """The sample photo is 15 June, so a tight window on it hits and one on
+    April misses -- which is the whole difference from asking for the year."""
+    assert client.get("/photo/ada/2019-06-15?window=20").status_code == 200
+    assert client.get("/photo/ada/2019-02-01?window=20").status_code == 404
+
+
+def test_a_narrow_window_that_misses_every_photo_is_a_404(client):
+    """Narrower is allowed to find nothing. The renderer draws no portrait."""
+    assert client.get("/photo/ada/2019-01-02?window=5").status_code == 404
+
+
+def test_a_bare_year_still_means_the_whole_year(client):
+    r = client.get("/photo/ada/2019")
+    assert r.status_code == 200 and r.headers["X-Photo-Taken"].startswith("2019")
+
+
+def test_an_unparseable_date_is_a_404_not_a_500(client):
+    for bad in ("not-a-date", "2019-13-45", "june"):
+        assert client.get(f"/photo/ada/{bad}").status_code == 404
+
+
+def test_the_window_is_bounded_so_a_caller_cannot_ask_for_everything(client):
+    """A huge window would quietly become 'any photo ever', which is the lie."""
+    from kiddo_growth_chart.web.app import MAX_WINDOW_DAYS, _window
+    start, end = _window("2019-06-15", "99999")
+    assert (end - start).days == 2 * MAX_WINDOW_DAYS
+
+
 def test_providers_endpoint_lists_installed_sources(client):
     body = json.loads(client.get("/providers.json").data)
     assert "folder" in body["installed"] and "none" in body["installed"]
