@@ -127,9 +127,15 @@ point of that view is four childhoods laid over each other.
 
 The window is the caller's to choose and is capped at a year. A provider must
 never widen a window by itself, but a renderer that knows a portrait decorates
-a moment rather than dating it may reasonably ask for a wider one. Every
-portrait is captioned with the date it was actually taken, so a photo from
-three months away says so rather than borrowing the frame's month.
+a moment rather than dating it may reasonably ask for a wider one.
+
+**Every portrait is captioned with the date it was actually taken**, and that
+caption is what lets the rest of this be honest. When a window turns up
+nothing, the portrait already showing holds rather than the figure going
+blank — a real gap can run eleven months, and eleven blank frames next to a
+climbing readout is worse to look at than one face that says how old it is.
+Once the photo is further from the moment on screen than the search window,
+the caption is marked stale rather than merely stated.
 
 Write your own by subclassing `PhotoProvider` and advertising it:
 
