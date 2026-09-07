@@ -13,6 +13,7 @@ dependencies = ["flask>=3.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+serve = ["gunicorn>=21"]
 
 # The reference photo provider ships in-tree. Third-party providers register
 # themselves here; see docs in providers/__init__.py.

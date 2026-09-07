@@ -1,0 +1,20 @@
+[Unit]
+Description=kiddo-growth-chart — family height chart (Flask via gunicorn)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jeremy
+WorkingDirectory=/home/jeremy/kiddo-growth-chart
+# Holds KIDDO_CONFIG and IMMICH_API_KEY. Mode 600: the key is a standing
+# bearer credential, and the config names a file of children's measurements.
+EnvironmentFile=/home/jeremy/.config/kiddo-growth-chart/env
+# host port 8101 -> Tailscale Serve :8461 (both reserved in jer-pi-service-ports.md).
+ExecStart=/home/jeremy/kiddo-growth-chart/venv/bin/gunicorn \
+  --workers 2 --bind 127.0.0.1:8101 "kiddo_growth_chart.web:create_app()"
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

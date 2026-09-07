@@ -11,11 +11,15 @@ Configure it with a server URL and an API key (Account Settings -> API Keys)::
     {
       "provider": "immich",
       "provider_options": {"url": "https://immich.example.com",
-                           "api_key_env": "IMMICH_API_KEY"}
+                           "api_key_file": "~/.immich_key"}
     }
 
-The key is read from the environment by default so it stays out of the config
-file. ``api_key`` may be given inline instead.
+The key is never read from the config file itself. ``api_key_file`` names a file
+holding nothing but the key, which is the option to reach for under systemd: the
+secret stays in one place at mode 600 instead of being copied into a unit's
+environment, where it would also be readable from ``systemctl show``. Failing
+that the environment is consulted, and ``api_key`` may be passed inline by a
+caller constructing the provider in code.
 
 A bad key raises rather than returning ``None``. Returning nothing would render
 as "no photo of this kid that year", which is exactly the failure that hides a
@@ -34,6 +38,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from pathlib import Path
 
 from . import FaceBox, Person, Photo, PhotoProvider
 
@@ -67,14 +72,18 @@ class ImmichProvider(PhotoProvider):
     name = "immich"
 
     def __init__(self, url: str | None = None, api_key: str | None = None,
-                 api_key_env: str = "IMMICH_API_KEY", timeout: float = 10.0):
+                 api_key_env: str = "IMMICH_API_KEY",
+                 api_key_file: str | None = None, timeout: float = 10.0):
         self.configure(url=url, api_key=api_key, api_key_env=api_key_env,
-                       timeout=timeout)
+                       api_key_file=api_key_file, timeout=timeout)
 
     def configure(self, url=None, api_key=None, api_key_env="IMMICH_API_KEY",
-                  timeout=10.0, **_ignored) -> None:
+                  api_key_file=None, timeout=10.0, **_ignored) -> None:
         self.base = _base_url(url) if url else None
-        self.api_key = api_key or os.environ.get(api_key_env or "") or None
+        self.api_key = (api_key
+                        or _key_from_file(api_key_file)
+                        or os.environ.get(api_key_env or "")
+                        or None)
         self.timeout = float(timeout)
 
     # -- discovery ---------------------------------------------------------
@@ -214,6 +223,21 @@ class ImmichProvider(PhotoProvider):
 
     def _post(self, path: str, body: dict):
         return self._open(self._request(path, json.dumps(body).encode("utf-8")))
+
+
+def _key_from_file(path: str | None) -> str | None:
+    """Read a key from a file, or None if it is not there.
+
+    Whitespace is stripped: a key written with ``echo`` picks up a newline, and
+    a trailing newline in a header value is rejected by urllib rather than
+    ignored, which fails a long way from the cause.
+    """
+    if not path:
+        return None
+    try:
+        return Path(path).expanduser().read_text(encoding="utf-8").strip() or None
+    except OSError:
+        return None
 
 
 def _base_url(url: str) -> str:
