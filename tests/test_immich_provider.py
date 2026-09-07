@@ -169,6 +169,34 @@ def test_an_unconfigured_provider_is_empty_rather_than_an_error(server):
     assert server.calls == []
 
 
+def test_the_key_can_come_from_a_file(server, tmp_path):
+    """The systemd path: the secret stays in one 600 file, not in a unit."""
+    keyfile = tmp_path / "growth_immich_key"
+    keyfile.write_text("from-file\n")          # trailing newline is normal
+    p = ImmichProvider(url="https://immich.test", api_key_file=str(keyfile))
+    server.routes["/people"] = {"people": []}
+    p.people()
+    assert server.calls[0][3]["X-api-key"] == "from-file"
+
+
+def test_a_missing_key_file_is_not_a_crash(server, tmp_path):
+    p = ImmichProvider(url="https://immich.test",
+                       api_key_file=str(tmp_path / "absent"),
+                       api_key_env="NOT_SET_ANYWHERE")
+    assert p.people() == []
+    assert server.calls == []
+
+
+def test_a_key_file_beats_the_environment(server, tmp_path, monkeypatch):
+    monkeypatch.setenv("IMMICH_API_KEY", "from-env")
+    keyfile = tmp_path / "k"
+    keyfile.write_text("from-file")
+    p = ImmichProvider(url="https://immich.test", api_key_file=str(keyfile))
+    server.routes["/people"] = {"people": []}
+    p.people()
+    assert server.calls[0][3]["X-api-key"] == "from-file"
+
+
 def test_the_key_can_come_from_the_environment(server, monkeypatch):
     monkeypatch.setenv("IMMICH_API_KEY", "from-env")
     p = ImmichProvider(url="https://immich.test")

@@ -82,17 +82,25 @@ Point it at a server and an API key from Account Settings → API Keys:
   "provider": "immich",
   "provider_options": {
     "url": "https://immich.example.com",
-    "api_key_env": "IMMICH_API_KEY"
+    "api_key_file": "~/.immich_key"
   }
 }
 ```
 
-Run with `--config that.json`. The key is read from the environment so it stays
-out of the file; `api_key` sets it inline instead. A rejected key raises rather
-than returning `None`, because "no photo of this kid that year" is exactly how a
-misconfiguration would otherwise hide behind a plausible chart. Timeouts and
-server errors do return `None`. Visit `/providers.json` to list the person UUIDs
-to bind your kids to.
+Run with `--config that.json`. The key never goes in the config file: name a
+file that holds only the key, and keep it at mode 600. Under systemd that beats
+an environment variable, which `systemctl show` will hand to anyone who asks.
+`$IMMICH_API_KEY` is consulted if no file is named.
+
+The key needs four read-only scopes and nothing else — `person.read`,
+`asset.read`, `face.read`, `asset.view`. It cannot then modify or delete
+anything, and it is worth minting a dedicated one so it can be revoked without
+disturbing whatever else talks to your server.
+
+A rejected key raises rather than returning `None`, because "no photo of this
+kid that year" is exactly how a misconfiguration would otherwise hide behind a
+plausible chart. Timeouts and server errors do return `None`. Visit
+`/providers.json` to list the person UUIDs to bind your kids to.
 
 Write your own by subclassing `PhotoProvider` and advertising it:
 
