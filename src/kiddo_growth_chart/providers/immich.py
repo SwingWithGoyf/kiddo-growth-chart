@@ -73,18 +73,46 @@ class ImmichProvider(PhotoProvider):
 
     def __init__(self, url: str | None = None, api_key: str | None = None,
                  api_key_env: str = "IMMICH_API_KEY",
-                 api_key_file: str | None = None, timeout: float = 10.0):
+                 api_key_file: str | None = None, tag: str | None = None,
+                 tag_only: bool = False, timeout: float = 10.0):
         self.configure(url=url, api_key=api_key, api_key_env=api_key_env,
-                       api_key_file=api_key_file, timeout=timeout)
+                       api_key_file=api_key_file, tag=tag, tag_only=tag_only,
+                       timeout=timeout)
 
     def configure(self, url=None, api_key=None, api_key_env="IMMICH_API_KEY",
-                  api_key_file=None, timeout=10.0, **_ignored) -> None:
+                  api_key_file=None, tag=None, tag_only=False, timeout=10.0,
+                  **_ignored) -> None:
         self.base = _base_url(url) if url else None
         self.api_key = (api_key
                         or _key_from_file(api_key_file)
                         or os.environ.get(api_key_env or "")
                         or None)
+        self.tag = tag or None
+        self.tag_only = bool(tag_only)
         self.timeout = float(timeout)
+
+    def _tag_id(self) -> str | None:
+        """Resolve the configured tag name to its id, once per process.
+
+        A tag that does not exist raises. Falling back quietly would leave
+        curation silently switched off, looking exactly like curation that is
+        on and simply has no photo for this window -- and the whole point of
+        the option is to control which photo gets picked.
+        """
+        if not self.tag:
+            return None
+        return _cached(("tag", self.base, self.tag), self._resolve_tag)
+
+    def _resolve_tag(self) -> str:
+        wanted = self.tag.strip().lower()
+        for t in self._get("/tags") or []:
+            if wanted in (str(t.get("value", "")).lower(),
+                          str(t.get("name", "")).lower()):
+                return t["id"]
+        raise ImmichError(
+            f"no Immich tag named {self.tag!r}; create it or drop the "
+            "'tag' provider option"
+        )
 
     # -- discovery ---------------------------------------------------------
     def people(self) -> list[Person]:
@@ -108,12 +136,29 @@ class ImmichProvider(PhotoProvider):
     def photo_for(self, person_id, start, end, prefer_full_body=False) -> Photo | None:
         if not self.base or not self.api_key or not UUID.match(person_id or ""):
             return None
+        # The tag settings belong in the key: they change which photo comes
+        # back, so two differently-configured providers in one process must
+        # not read each other's answers.
         return _cached(
-            (self.base, person_id, start, end),
+            (self.base, person_id, start, end, self.tag, self.tag_only),
             lambda: self._search(person_id, start, end),
         )
 
     def _search(self, person_id, start, end) -> Photo | None:
+        """Tagged photos first, then anything.
+
+        A curated tag is a preference, not a filter: coverage is thinnest in
+        the earliest years, which is where a hand-picked shot is least likely
+        to exist and a portrait is most wanted. ``tag_only`` makes it a filter
+        for anyone who would rather have the gap.
+        """
+        tag_id = self._tag_id()
+        found = self._search_once(person_id, start, end, tag_id)
+        if found or self.tag_only or not tag_id:
+            return found
+        return self._search_once(person_id, start, end, None)
+
+    def _search_once(self, person_id, start, end, tag_id) -> Photo | None:
         try:
             body = self._post("/search/metadata", {
                 # These flat fields are deprecated in favour of `filter` from
@@ -125,6 +170,7 @@ class ImmichProvider(PhotoProvider):
                 "type": "IMAGE",
                 "size": SEARCH_PAGE,
                 "withExif": False,
+                **({"tagIds": [tag_id]} if tag_id else {}),
             })
         except ImmichError:
             raise

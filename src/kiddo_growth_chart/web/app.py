@@ -70,6 +70,27 @@ def _payload(dataset, clock: Clock) -> dict:
     }
 
 
+DEFAULT_WINDOW_DAYS = 120
+MAX_WINDOW_DAYS = 366
+
+
+def _window(when: str, days: str | None) -> tuple[dt.date, dt.date]:
+    """Turn ``YYYY`` or ``YYYY-MM-DD`` into the window to search.
+
+    The width is the caller's to choose, and it is bounded. A provider must
+    never widen a window on its own, but a renderer that knows a portrait is
+    decorating a moment rather than dating it may legitimately ask for a wider
+    one -- so the number lives here, in the request, not inside the source.
+    """
+    if len(when) == 4 and when.isdigit():
+        year = int(when)
+        return dt.date(year, 1, 1), dt.date(year, 12, 31)
+    day = dt.date.fromisoformat(when)          # ValueError -> 404
+    width = DEFAULT_WINDOW_DAYS if days is None else int(days)
+    width = max(1, min(width, MAX_WINDOW_DAYS))
+    return day - dt.timedelta(days=width), day + dt.timedelta(days=width)
+
+
 def blueprint(config: Config | None = None) -> Blueprint:
     config = config or Config()
     bp = Blueprint(
@@ -107,13 +128,22 @@ def blueprint(config: Config | None = None) -> Blueprint:
             return jsonify({"error": str(exc)}), 500
         return jsonify(_payload(dataset, clock))
 
-    @bp.route("/photo/<kid_key>/<int:year>")
-    def photo(kid_key: str, year: int):
-        """One photo of this kid taken in this calendar year, or 404.
+    @bp.route("/photo/<kid_key>/<when>")
+    def photo(kid_key: str, when: str):
+        """One photo of this kid near ``when``, or 404.
+
+        ``when`` is ``YYYY`` for a whole calendar year, or ``YYYY-MM-DD`` for a
+        window of ``?window=`` days either side -- which is what video mode
+        asks for, so a portrait tracks the moment being played rather than
+        being the same face all year.
 
         404 is a real answer; the caller draws the datapoint without a portrait
         rather than reaching for a photo from the wrong age.
         """
+        try:
+            start, end = _window(when, request.args.get("window"))
+        except ValueError:
+            abort(404)
         try:
             dataset = load(config.dataset)
             kid = dataset.by_key(kid_key)
@@ -123,9 +153,7 @@ def blueprint(config: Config | None = None) -> Blueprint:
             abort(404)
         p = provider()
         found = p.photo_for(
-            kid.photo_person_id,
-            dt.date(year, 1, 1),
-            dt.date(year, 12, 31),
+            kid.photo_person_id, start, end,
             prefer_full_body=request.args.get("body") == "1",
         )
         if not found:

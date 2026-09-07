@@ -102,6 +102,35 @@ kid that year" is exactly how a misconfiguration would otherwise hide behind a
 plausible chart. Timeouts and server errors do return `None`. Visit
 `/providers.json` to list the person UUIDs to bind your kids to.
 
+### Curating which photo gets picked
+
+Tag the shots you want in Immich and name the tag. Add `tag.read` to the key.
+
+```json
+"provider_options": { "tag": "growth chart" }
+```
+
+Tagged photos win; if the tag has nothing in the window, an untagged photo
+fills the gap, because coverage is thinnest in the early years and that is
+exactly where a hand-picked shot is least likely to exist. Set
+`"tag_only": true` to take the gap instead. A tag name that does not exist on
+the server raises — falling back quietly would look identical to curation that
+is simply thin, and choosing the photo is the whole point of the option.
+
+## Portraits follow the moment, not the year
+
+`/photo/<kid>/<when>` takes `YYYY` for a whole year, or `YYYY-MM-DD` with
+`?window=<days>` either side. Video mode asks per frame, so a portrait tracks
+the moment being played rather than being one face for twelve months — and on
+the age clock it asks for each kid's *own* date at that age, since the whole
+point of that view is four childhoods laid over each other.
+
+The window is the caller's to choose and is capped at a year. A provider must
+never widen a window by itself, but a renderer that knows a portrait decorates
+a moment rather than dating it may reasonably ask for a wider one. Every
+portrait is captioned with the date it was actually taken, so a photo from
+three months away says so rather than borrowing the frame's month.
+
 Write your own by subclassing `PhotoProvider` and advertising it:
 
 ```toml

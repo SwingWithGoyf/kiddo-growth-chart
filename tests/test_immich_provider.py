@@ -34,10 +34,15 @@ def server(monkeypatch):
     calls = []
     routes = {}
 
+    state = type("S", (), {"calls": calls, "routes": routes, "route_search": None})()
+
     def fake_urlopen(req, timeout=None):
-        calls.append((req.method, req.full_url,
-                      json.loads(req.data) if req.data else None,
-                      req.headers))
+        body = json.loads(req.data) if req.data else None
+        calls.append((req.method, req.full_url, body, req.headers))
+        # A search may be answered by a callable, so a test can vary the reply
+        # on what the request actually asked for (tagged vs not).
+        if state.route_search and "/search/metadata" in req.full_url:
+            return FakeResponse({"assets": {"items": state.route_search(body)}})
         for fragment, payload in routes.items():
             if fragment in req.full_url:
                 if isinstance(payload, Exception):
@@ -47,7 +52,7 @@ def server(monkeypatch):
 
     monkeypatch.setattr(immich.urllib.request, "urlopen", fake_urlopen)
     monkeypatch.setattr(immich, "_cache", {})
-    return type("S", (), {"calls": calls, "routes": routes})()
+    return state
 
 
 @pytest.fixture
@@ -203,6 +208,81 @@ def test_the_key_can_come_from_the_environment(server, monkeypatch):
     server.routes["/people"] = {"people": []}
     p.people()
     assert server.calls[0][3]["X-api-key"] == "from-env"
+
+
+TAG_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
+
+
+def _tagged(server, tagged_items, untagged_items):
+    """Route /search/metadata by whether the request carried tagIds."""
+    server.routes["/tags"] = [{"id": TAG_ID, "name": "growth chart",
+                               "value": "growth chart"}]
+    server.routes["/faces"] = []
+
+    server.route_search = (
+        lambda req_body: tagged_items if req_body.get("tagIds") else untagged_items
+    )
+
+
+def test_a_tagged_photo_is_preferred_over_an_untagged_one(server):
+    p = ImmichProvider(url="https://immich.test", api_key="k", tag="growth chart")
+    _tagged(server, [_asset("2019-06-01T09:00:00.000Z", ASSET)],
+                    [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    got = p.photo_for(PERSON, dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+    assert got.id == ASSET          # tagged, despite being further from centre
+
+
+def test_an_untagged_photo_fills_a_gap_the_tag_does_not_cover(server):
+    """Curation is a preference. Coverage is thinnest exactly where a
+    hand-picked shot is least likely to exist."""
+    p = ImmichProvider(url="https://immich.test", api_key="k", tag="growth chart")
+    _tagged(server, [], [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    got = p.photo_for(PERSON, dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+    assert got.id == OTHER
+
+
+def test_tag_only_takes_the_gap_instead_of_an_untagged_photo(server):
+    p = ImmichProvider(url="https://immich.test", api_key="k",
+                       tag="growth chart", tag_only=True)
+    _tagged(server, [], [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    assert p.photo_for(PERSON, dt.date(2019, 1, 1), dt.date(2019, 12, 31)) is None
+
+
+def test_a_tag_name_that_does_not_exist_raises_rather_than_silently_ignoring(server):
+    """Falling back quietly would look identical to curation that is simply
+    thin -- and picking the photo is the entire point of the option."""
+    p = ImmichProvider(url="https://immich.test", api_key="k", tag="typoed")
+    server.routes["/tags"] = [{"id": TAG_ID, "name": "growth chart",
+                               "value": "growth chart"}]
+    with pytest.raises(ImmichError, match="no Immich tag"):
+        p.photo_for(PERSON, dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+
+
+def test_no_tag_configured_means_no_tags_request_at_all(server, provider):
+    server.routes["/search/metadata"] = {"assets": {"items": [_asset()]}}
+    server.routes["/faces"] = []
+    provider.photo_for(PERSON, dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+    assert not any("/tags" in c[1] for c in server.calls)
+
+
+def test_the_cache_does_not_confuse_two_differently_tagged_providers(server):
+    """The tag changes which photo comes back, so it belongs in the key."""
+    _tagged(server, [_asset("2019-06-01T09:00:00.000Z", ASSET)],
+                    [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    strict = ImmichProvider(url="https://immich.test", api_key="k",
+                            tag="growth chart", tag_only=True)
+    loose = ImmichProvider(url="https://immich.test", api_key="k",
+                           tag="growth chart")
+    window = (dt.date(2019, 1, 1), dt.date(2019, 12, 31))
+    assert strict.photo_for(PERSON, *window).id == ASSET
+    assert loose.photo_for(PERSON, *window).id == ASSET
+
+    _tagged(server, [], [_asset("2019-06-28T09:00:00.000Z", OTHER)])
+    server.route_search = (
+        lambda b: [] if b.get("tagIds") else [_asset("2019-06-28T09:00:00.000Z", OTHER)]
+    )
+    bare = ImmichProvider(url="https://immich.test", api_key="k")
+    assert bare.photo_for(PERSON, *window).id == OTHER      # not the tagged hit
 
 
 def test_repeated_windows_are_served_from_cache(server, provider):

@@ -44,14 +44,21 @@ svg { width: 100%; height: auto; display: block; }
                     color: var(--muted); background: var(--panel); padding-right: 5px;
                     font-variant-numeric: tabular-nums; }
 .figures { position: relative; display: flex; align-items: flex-end;
-           justify-content: space-around; gap: 12px; height: 380px; padding: 10px 6px 0; }
-.figure { display: flex; flex-direction: column; align-items: center; gap: 6px;
+           justify-content: space-around; gap: 12px; height: 460px; padding: 10px 6px 0; }
+.figure { display: flex; flex-direction: column; align-items: center; gap: 5px;
           flex: 1; min-width: 0; height: 100%; justify-content: flex-end; }
-/* The portrait never scales with height; a head is not a body. */
-.portrait { width: 56px; height: 56px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--line); background: var(--line); flex: none; }
-.portrait.empty { display: grid; place-items: center; color: var(--muted); font-size: 18px; }
-.body { width: 46px; border-radius: 8px 8px 0 0; transform-origin: bottom center; }
+/* The portrait never scales with height; a head is not a body. Its size tracks
+   the viewport instead, so four of them still fit on a phone. */
+.portrait { width: clamp(64px, 11vw, 120px); aspect-ratio: 1; border-radius: 50%;
+            border: 2px solid var(--line); background: var(--line); flex: none;
+            overflow: hidden; }
+.portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.portrait.empty { display: grid; place-items: center; color: var(--muted); font-size: 22px; }
+/* The portrait's own date. The search window is months wide, so this is what
+   keeps a nearby photo from reading as one taken at the moment shown. */
+.portrait-when { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums;
+                 min-height: 1em; }
+.body { width: 52px; border-radius: 8px 8px 0 0; transform-origin: bottom center; }
 .figure .who { font-size: 12px; font-weight: 600; }
 .figure .readout { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .frame-label { text-align: center; font-size: 13px; color: var(--muted);
